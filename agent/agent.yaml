@@ -1,0 +1,23 @@
+server:
+  log_level: debug
+
+traces:
+  configs:
+  - name: default
+    remote_write:
+      - endpoint: ${TEMPO_HOST:-localhost:4317}
+        insecure: true
+    receivers:
+      otlp:
+        protocols:
+          http:
+
+  # agent
+  agent:
+    # The Agent dashboards are written to assume Kubernetes, so we inject some
+    # fake Kubernetes labels here.
+    extra_labels:
+      cluster: docker-compose
+      namespace: docker-compose
+      container: grafana-agent
+      pod: grafana-agent-${HOSTNAME:-example}

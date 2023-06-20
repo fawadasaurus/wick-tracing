@@ -1,0 +1,48 @@
+version: "3"
+services:
+  grafana:
+    image: grafana/grafana:9.2.3
+    entrypoint:
+      - /usr/share/grafana/bin/grafana-server
+      - --homepath=/usr/share/grafana
+      - --config=/etc/grafana-config/grafana.ini
+    volumes:
+      - ./grafana/grafana.ini:/etc/grafana-config/grafana.ini
+      - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    ports:
+      - "3000:3000"
+
+  tempo:
+    image: grafana/tempo:1.5.0
+    command:
+      - "-search.enabled=true"
+      - "-storage.trace.backend=local"                  # tell tempo where to permanently put traces
+      - "-storage.trace.local.path=/tmp/tempo/traces"
+      - "-storage.trace.wal.path=/tmp/tempo/wal"        # tell tempo where to store the wal
+      - "-auth.enabled=false"                           # disables the requirement for the X-Scope-OrgID header
+      - "-server.http-listen-port=3200"
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+
+  # agent:
+  #   profiles: [agent]
+  #   image: grafana/agent:latest
+  #   volumes:
+  #     - ./agent/config:/etc/agent-config
+  #   entrypoint:
+  #     - /bin/agent
+  #     - -server.http.address=0.0.0.0:12345
+  #     - -config.file=/etc/agent-config/agent.yaml
+  #     - -metrics.wal-directory=/tmp/agent/wal
+  #     - -enable-features=integrations-next
+  #     - -config.expand-env
+  #     - -config.enable-read-api
+  #   environment:
+  #     HOSTNAME: agent
+  #     TEMPO_HOST: tempo:4317
+  #   ports:
+  #     - "12345:12345"
+  #     - "4318:4318"
+  #   depends_on:
+  #     - tempo
